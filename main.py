@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import random
+from datetime import datetime
 
 app = FastAPI()
 app.add_middleware(
@@ -24,14 +26,14 @@ def get_energy():
     return {
         "state": {
             "isLightEnabled": isLightEnabled,
-            "isTrainEnabled": False,
-            "isFactoryEnabled": True,
-            "isBlackout": False
+            "isTrainEnabled": random.choice([True, False]),
+            "isFactoryEnabled": random.choice([True, False]),
+            "isBlackout": random.choice([True, False])
         },
-        "texts": [],
+        "texts": [f"現在時刻: {datetime.now().strftime('%H:%M:%S')}"],
         "variables": {
-            "totalPowerW": 3200,
-            "surplusPowerW": 450
+            "totalPowerW": random.randint(2000, 6000),
+            "surplusPowerW": random.randint(-1000, 1500)
         }
     }
 
