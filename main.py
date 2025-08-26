@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+import random
 
 app = FastAPI()
 app.add_middleware(
@@ -30,8 +31,8 @@ def get_energy():
         },
         "texts": [],
         "variables": {
-            "totalPowerW": 3200,
-            "surplusPowerW": 450
+            "totalPower": 3200 + random.randint(-100, 100),
+            "surplusPower": 450
         }
     }
 
@@ -49,10 +50,9 @@ def receive_state(payload: StateModel):
     }
 
     variables = {
-        "totalPowerW": 3200,
-        "surplusPowerW": 450
+        "totalPower": 3200 + random.randint(-100, 100),
+        "surplusPower": 450
     }
-
     return {
         "state": state,
         "texts": [],
