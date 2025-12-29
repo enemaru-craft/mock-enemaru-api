@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import random
@@ -9,90 +9,48 @@ app.add_middleware(
     allow_origins=["*"], allow_methods=["*"], allow_headers=["*"]
 )
 
-isHouseEnabled = False
-isFacilityEnabled = False
-isLightEnabled = False
+# isHouseEnabled = False
+# isFacilityEnabled = False
+# isLightEnabled = False
 isTrainEnabled = False
-isFactoryEnabled = False
+# isFactoryEnabled = False
 isBlackout = False
 
-
-class StateModel(BaseModel):
-    isHouseEnabled: bool = False
-    isFacilityEnabled: bool = False
-    isLightEnabled: bool = False
-    isTrainEnabled: bool = False
-    isFactoryEnabled: bool = False
-    isBlackout: bool = False
+houseLitPercent = 0
+facilityLitPercent = 0
+lightLitPercent = 0
+factoryLitPercent = 0
 
 
 class CurrentWorldStateModel(BaseModel):
     sessionId: str
 
-class EquipmentModel(BaseModel):
+
+class EquipmentPercentModel(BaseModel):
     sessionId: str
     equipment: str
+    percent: int
+
 
 @app.post("/get-current-world-state")
 def get_current_world_state(payload: CurrentWorldStateModel):
     print(payload.sessionId)
-    global isHouseEnabled
-    global isFacilityEnabled
-    global isLightEnabled
+
+    global houseLitPercent
+    global facilityLitPercent
+    global lightLitPercent
+    global factoryLitPercent
     global isTrainEnabled
-    global isFactoryEnabled
     global isBlackout
-
-    
-    return {
-        "state": {
-            "isHouseEnabled": isHouseEnabled,
-            "isFacilityEnabled": isFacilityEnabled,
-            "isLightEnabled": isLightEnabled,
-            "isTrainEnabled": isTrainEnabled,
-            "isFactoryEnabled": isFactoryEnabled,
-            "isBlackout": isBlackout
-        },
-        "texts": [],
-        # "texts": ["&cHello, \nI am an &bVillager 0!", "&cHello, \nI am an &bVillager 1!", "&cHello, \nI am an &bVillager 2!"],
-        "variables": {
-            "totalPower": 3200 + random.randint(-100, 100),
-            "surplusPower": 450 + random.randint(-100, 100)
-        }
-    }
-
-@app.post("/turn-on-equipment")
-def turn_on_equipment(payload: EquipmentModel):
-    print(payload.sessionId)
-    print(payload.equipment)
-
-    global isHouseEnabled
-    global isFacilityEnabled
-    global isLightEnabled
-    global isTrainEnabled
-    global isFactoryEnabled
-    global isBlackout
-
-    if payload.equipment == "light":
-        isLightEnabled = True
-    elif payload.equipment == "train":
-        isTrainEnabled = True
-    elif payload.equipment == "factory":
-        isFactoryEnabled = True
-    elif payload.equipment == "house":
-        isHouseEnabled = True
-    elif payload.equipment == "facility":
-        isFacilityEnabled = True
 
     state = {
-        "isHouseEnabled": isHouseEnabled,
-        "isFacilityEnabled": isFacilityEnabled,
-        "isLightEnabled": isLightEnabled,
+        "houseLitPercent": houseLitPercent,
+        "facilityLitPercent": facilityLitPercent,
+        "lightLitPercent": lightLitPercent,
         "isTrainEnabled": isTrainEnabled,
-        "isFactoryEnabled": isFactoryEnabled,
+        "factoryLitPercent": factoryLitPercent,
         "isBlackout": isBlackout
     }
-
     variables = {
         "totalPower": 3200 + random.randint(-100, 100),
         "surplusPower": 450
@@ -105,38 +63,41 @@ def turn_on_equipment(payload: EquipmentModel):
     }
 
 
-@app.post("/turn-off-equipment")
-def turn_off_equipment(payload: EquipmentModel):
+@app.post("/set-equipment-percent")
+def set_equipment_percent(payload: EquipmentPercentModel):
     print(payload.sessionId)
     print(payload.equipment)
+    print(payload.percent)
 
-    global isHouseEnabled
-    global isFacilityEnabled
-    global isLightEnabled
+    global houseLitPercent
+    global facilityLitPercent
+    global lightLitPercent
+    global factoryLitPercent
     global isTrainEnabled
-    global isFactoryEnabled
     global isBlackout
 
-    if payload.equipment == "light":
-        isLightEnabled = False
-    elif payload.equipment == "train":
-        isTrainEnabled = False
-    elif payload.equipment == "factory":
-        isFactoryEnabled = False
-    elif payload.equipment == "house":
-        isHouseEnabled = False
+    if payload.equipment == "house":
+        houseLitPercent = payload.percent
     elif payload.equipment == "facility":
-        isFacilityEnabled = False
+        facilityLitPercent = payload.percent
+    elif payload.equipment == "light":
+        lightLitPercent = payload.percent
+    elif payload.equipment == "factory":
+        factoryLitPercent = payload.percent
+    elif payload.equipment == "train":
+        if payload.percent == 0:
+            isTrainEnabled = False
+        else:
+            isTrainEnabled = True
 
     state = {
-        "isHouseEnabled": isHouseEnabled,
-        "isFacilityEnabled": isFacilityEnabled,
-        "isLightEnabled": isLightEnabled,
+        "houseLitPercent": houseLitPercent,
+        "facilityLitPercent": facilityLitPercent,
+        "lightLitPercent": lightLitPercent,
         "isTrainEnabled": isTrainEnabled,
-        "isFactoryEnabled": isFactoryEnabled,
+        "factoryLitPercent": factoryLitPercent,
         "isBlackout": isBlackout
     }
-
     variables = {
         "totalPower": 3200 + random.randint(-100, 100),
         "surplusPower": 450
@@ -148,23 +109,43 @@ def turn_off_equipment(payload: EquipmentModel):
         "variables": variables
     }
 
+# @app.post("/turn-on-equipment")
+# def turn_on_equipment(payload: EquipmentModel):
+#     print(payload.sessionId)
+#     print(payload.equipment)
 
-# @app.post("/state")
-# def receive_state(payload: StateModel):
-#     print(payload.model_dump_json())
+#     global isHouseEnabled
+#     global isFacilityEnabled
 #     global isLightEnabled
-#     isLightEnabled = payload.isLightEnabled
+#     global isTrainEnabled
+#     global isFactoryEnabled
+#     global isBlackout
+
+#     if payload.equipment == "light":
+#         isLightEnabled = True
+#     elif payload.equipment == "train":
+#         isTrainEnabled = True
+#     elif payload.equipment == "factory":
+#         isFactoryEnabled = True
+#     elif payload.equipment == "house":
+#         isHouseEnabled = True
+#     elif payload.equipment == "facility":
+#         isFacilityEnabled = True
+
 #     state = {
+#         "isHouseEnabled": isHouseEnabled,
+#         "isFacilityEnabled": isFacilityEnabled,
 #         "isLightEnabled": isLightEnabled,
-#         "isTrainEnabled": payload.isTrainEnabled,
-#         "isFactoryEnabled": payload.isFactoryEnabled,
-#         "isBlackout": payload.isBlackout
+#         "isTrainEnabled": isTrainEnabled,
+#         "isFactoryEnabled": isFactoryEnabled,
+#         "isBlackout": isBlackout
 #     }
 
 #     variables = {
 #         "totalPower": 3200 + random.randint(-100, 100),
 #         "surplusPower": 450
 #     }
+#     print(state)
 #     return {
 #         "state": state,
 #         "texts": [],
@@ -172,10 +153,45 @@ def turn_off_equipment(payload: EquipmentModel):
 #     }
 
 
+# @app.post("/turn-off-equipment")
+# def turn_off_equipment(payload: EquipmentModel):
+#     print(payload.sessionId)
+#     print(payload.equipment)
 
-# debug用
-# @app.post("/state")
-# async def receive_state_raw(req: Request):
-#     body = await req.body()
-#     print("RAW:", body.decode("utf-8", errors="replace"))
-#     return {"ok": True}
+#     global isHouseEnabled
+#     global isFacilityEnabled
+#     global isLightEnabled
+#     global isTrainEnabled
+#     global isFactoryEnabled
+#     global isBlackout
+
+#     if payload.equipment == "light":
+#         isLightEnabled = False
+#     elif payload.equipment == "train":
+#         isTrainEnabled = False
+#     elif payload.equipment == "factory":
+#         isFactoryEnabled = False
+#     elif payload.equipment == "house":
+#         isHouseEnabled = False
+#     elif payload.equipment == "facility":
+#         isFacilityEnabled = False
+
+#     state = {
+#         "isHouseEnabled": isHouseEnabled,
+#         "isFacilityEnabled": isFacilityEnabled,
+#         "isLightEnabled": isLightEnabled,
+#         "isTrainEnabled": isTrainEnabled,
+#         "isFactoryEnabled": isFactoryEnabled,
+#         "isBlackout": isBlackout
+#     }
+
+#     variables = {
+#         "totalPower": 3200 + random.randint(-100, 100),
+#         "surplusPower": 450
+#     }
+#     print(state)
+#     return {
+#         "state": state,
+#         "texts": [],
+#         "variables": variables
+#     }
